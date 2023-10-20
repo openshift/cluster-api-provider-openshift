@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -44,6 +45,7 @@ func main() {
 
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(openshiftclusterv1.Install(scheme))
+	utilruntime.Must(clusterv1.AddToScheme(scheme))
 
 	metricsAddr := flag.String("metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	probeAddr := flag.String("health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")

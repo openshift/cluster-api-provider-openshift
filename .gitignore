@@ -22,3 +22,6 @@ go.work
 
 # Local binaries
 bin/
+
+# Visual Studio Code Workspace
+.vscode/

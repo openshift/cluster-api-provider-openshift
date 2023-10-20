@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 // +genclient
@@ -47,7 +48,7 @@ type OpenShiftControlPlane struct {
 
 // OpenShiftControlPlaneSpec is the spec of the OpenShift control plane resource.
 type OpenShiftControlPlaneSpec struct {
-	// machineTemplate defines the machine template used to create the initial bootstrap and control plane machines.
+	// machineTemplate defines the machine template used to create the initial control plane machines.
 	// Continued management of the control plane machines will be handled by the control plane machine set.
 	// The machine template is therefore immutable and only applicable during the bootstrap process.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="machineTemplate is immutable"
@@ -55,6 +56,13 @@ type OpenShiftControlPlaneSpec struct {
 	// + ---
 	// + This field, and the fields within the OpenShiftControlPlaneMachineTemplate, are required as part of the Cluster API control plane API contract.
 	MachineTemplate OpenShiftControlPlaneMachineTemplate `json:"machineTemplate"`
+
+	// bootstrapMachineTemplate defines the machine template used to create the bootstrap machine.
+	// The bootstrap machine is used to bootstrap the control plane machines.
+	// The machine template is therefore immutable and only applicable during the bootstrap process.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="bootstrapMachineTemplate is immutable"
+	// +kubeubilder:validation:Required
+	BootstrapMachineTemplate OpenShiftControlPlaneMachineTemplate `json:"bootstrapMachineTemplate"`
 
 	// installStateSecretRef is a reference to a secret containing the install state.
 	// The install state secret must contain either the install config or the install state, or both.
@@ -165,7 +173,11 @@ type OpenShiftControlPlaneStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	// + ---
+	// + This field is required as part of the Cluster API control plane API contract.
+	// + The type is a clone of metav1.Condition, but the CAPI helpers expect this type.
+	// + TODO: Move this back to metav1 and create a wrapper that handles the interface and converts between the two types.
+	Conditions []clusterv1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
 	// initialized denotes whether or not the control plane has been initialized.
 	// This value will be set true once the first control plane node has joined the bootstrap control plane.
@@ -196,4 +208,16 @@ type OpenShiftControlPlaneList struct {
 
 	// items contains a list of OpenShiftControlPlanes.
 	Items []OpenShiftControlPlane `json:"items"`
+}
+
+// GetConditions returns the list of conditions for a cluster API object.
+// TODO: This should not be here.
+func (ocp *OpenShiftControlPlane) GetConditions() clusterv1.Conditions {
+	return ocp.Status.Conditions
+}
+
+// SetConditions sets the conditions on a cluster API object.
+// TODO: This should not be here.
+func (ocp *OpenShiftControlPlane) SetConditions(conditions clusterv1.Conditions) {
+	ocp.Status.Conditions = conditions
 }

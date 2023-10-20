@@ -51,6 +51,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(GroupVersion,
 		&OpenShiftControlPlane{},
 		&OpenShiftControlPlaneList{},
+		&OpenShiftBootstrapConfig{},
+		&OpenShiftBootstrapConfigList{},
 	)
 
 	return nil
